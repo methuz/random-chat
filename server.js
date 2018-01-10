@@ -1,8 +1,18 @@
 const app = require('express')()
+const debug = require('debug')('main')
+const fs = require('fs');
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
 const path = require('path')
-const debug = require('debug')('main')
+const yaml = require('js-yaml');
+
+let config;
+
+try {
+  config = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '/config.yml'), 'utf8'));
+} catch (e) {
+  console.log(e);
+}
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/index.html'))
@@ -11,7 +21,7 @@ app.get('/', (req, res) => {
 const waitingList = []
 const pairs = {}
 
-function joinRoom (user1, user2, roomId) {
+function joinRoom(user1, user2, roomId) {
   io.sockets.connected[user1].emit('join_room', roomId)
   pairs[user1] = {
     to: user2,
@@ -77,6 +87,8 @@ io.on('connection', (socket) => {
   })
 })
 
-http.listen(3000, () => {
-  debug('listening on port 3000')
+const server = http.listen(config.port, () => {
+  console.log(`listening on port ${config.port}`)
 })
+
+module.exports = server
