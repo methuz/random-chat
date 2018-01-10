@@ -91,4 +91,5 @@ const server = http.listen(config.port, () => {
   console.log(`listening on port ${config.port}`)
 })
 
+server.configFile = config
 module.exports = server
