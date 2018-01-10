@@ -7,6 +7,11 @@
       $(function () {
         var socket = io();
 		var roomId;
+
+		socket.on('reconnect', function (client) {
+			console.log('reconnect');
+			socket.emit('waiting', '');
+		})
 		socket.emit('waiting', '');
 
         $('form').submit(function(){
