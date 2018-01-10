@@ -8,17 +8,13 @@
         var socket = io();
 		var roomId;
 
-		socket.on('reconnect', function (client) {
-			console.log('reconnect');
-			socket.emit('waiting', '');
-		})
-		socket.emit('waiting', '');
+		socket.emit('waiting');
 
         $('form').submit(function(){
 		  //Append to one's own chat log
 		  var message = $('#m').val()
 			console.log('send to roomId = ', JSON.stringify(roomId, null, 4));
-			socket.emit('private message', {
+			socket.emit('private_message', {
 				room_id : roomId,
 				message : message
 			});
@@ -29,18 +25,27 @@
           return false;
         });
 
-		socket.on('join room', function(_roomId){
+		socket.on('join_room', function(_roomId){
 			console.log(_roomId)
 			roomId = _roomId
 			console.log(roomId)
 
-			socket.emit('join room', _roomId)
+			socket.emit('join_room', _roomId)
 			console.log('join room', _roomId)
     	});
 
-		socket.on('private message', function(message){
+		socket.on('private_message', function(message){
       	  $('#messages').append($('<li>').text(message));
     	});
+
+		socket.on('reconnect', function (client) {
+			console.log('reconnect');
+			socket.emit('waiting');
+		})
+
+		socket.on('pair_has_left', function(){ 
+		  socket.emit('waiting');
+		})
       });
     </script>
     <title>Socket.IO chat</title>

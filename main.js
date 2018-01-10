@@ -11,8 +11,8 @@ app.get('/', (req, res) => {
 const waitingList = []
 const pairs = {}
 
-function joinRoom(user1, user2, roomId) {
-  io.sockets.connected[user1].emit('join room', roomId)
+function joinRoom (user1, user2, roomId) {
+  io.sockets.connected[user1].emit('join_room', roomId)
   pairs[user1] = {
     to: user2,
     room_id: roomId
@@ -49,36 +49,31 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     debug(`user disconnected`)
-	
-	// If in waiting state
-	for (let i = 0; i < waitingList.lengh; i++) {
-		if (waitingList[i] === socket.id) {
-			delete waitingList[i]
-			return;
-		}
-	}
 
-    // If in paired room
-	const pairData = pairs[socket.id]
-	// pairData will be missing if the second user also disconnect
-	if (Object.hasOwnProperty(pairData, 'to')) {
-  		io.sockets.connected[pairData.to].emit('another user left')
-	}
+    // If left user was in waiting state
+    for (let i = 0; i < waitingList.lengh; i++) {
+      if (waitingList[i] === socket.id) {
+        delete waitingList[i]
+        return
+      }
+    }
+
+    // If left user was in paired room
+    const pairData = pairs[socket.id]
+    // pairData will be missing if the second user also disconnect
+    if (Object.hasOwnProperty(pairData, 'to')) {
+      io.sockets.connected[pairData.to].emit('pair_left')
+    }
   })
 
-  socket.on('join room', (roomId) => {
+  socket.on('join_room', (roomId) => {
     debug('join room', roomId)
     socket.join(roomId)
   })
 
-  socket.on('private message', (data) => {
+  socket.on('private_message', (data) => {
     debug('data = ', JSON.stringify(data, null, 4))
-    socket.broadcast.to(data.room_id).emit('private message', data.message)
-  })
-
-  socket.on('chat message', (msg) => {
-    socket.broadcast.emit('chat message', msg)
-    debug('message: ' + msg)
+    socket.broadcast.to(data.room_id).emit('private_message', data.message)
   })
 })
 
