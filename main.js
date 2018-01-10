@@ -9,11 +9,11 @@ app.get('/', (req, res) => {
 })
 
 const waitingList = []
-const rooms = []
+const pairs = {}
 
 function joinRoom(user1, user2, roomId) {
   io.sockets.connected[user1].emit('join room', roomId)
-  rooms[user1] = {
+  pairs[user1] = {
     to: user2,
     room_id: roomId
   }
@@ -48,7 +48,22 @@ io.on('connection', (socket) => {
   debug(`User ${socket.id} connected`)
 
   socket.on('disconnect', () => {
-    debug('user disconnected')
+    debug(`user disconnected`)
+	
+	// If in waiting state
+	for (let i = 0; i < waitingList.lengh; i++) {
+		if (waitingList[i] === socket.id) {
+			delete waitingList[i]
+			return;
+		}
+	}
+
+    // If in paired room
+	const pairData = pairs[socket.id]
+	// pairData will be missing if the second user also disconnect
+	if (Object.hasOwnProperty(pairData, 'to')) {
+  		io.sockets.connected[pairData.to].emit('another user left')
+	}
   })
 
   socket.on('join room', (roomId) => {
