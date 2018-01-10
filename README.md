@@ -5,12 +5,15 @@ This is a simple Node.js chat web app that will allow text communication between
 ## Installation
 ```git clone https://github.com/methuz/random-chat
 cd random-chat
-npm install```
+npm install
+```
 
 ## Testing
 ```npm install -g mocha
-npm test```
+npm test
+```
 
 ## Debugging
 ```DEBUG=main npm start
-DEBUG=main npm test```
+DEBUG=main npm test
+```
