@@ -16,6 +16,13 @@ const waitingList = []
 const pairs = {}
 
 io.on('connection', (socket) => {
+  /**
+   * waiting event triggered from clients to inform server that it's free to join another chat
+   * on these situations
+   * 1. Newly opened windows
+   * 2. It's participant in chat room has left
+   * This event will put socket.id to waiting list and check if there are any other available person to chat to if so it will generate roomId then send to client via join_room event for confirmation
+   */
   socket.on('waiting', () => {
     waitingList.push(socket.id)
     debug(`User ${socket.id} is waiting`)
@@ -42,6 +49,12 @@ io.on('connection', (socket) => {
 
   debug(`User ${socket.id} connected`)
 
+  /**
+   * when user disconnected the server will determined 2 conditions
+   * 1. if it's in waiting list, remove it
+   * 2. if it's in a conversation, inform it's pair that it has left
+   * then remove it from any cache
+   */
   socket.on('disconnect', () => {
     debug(`user disconnected`)
 
@@ -65,11 +78,17 @@ io.on('connection', (socket) => {
     delete (pairs[socket.id])
   })
 
+  /**
+   * This is ack signal from client to join a room
+   */
   socket.on('join_room_ack', (roomId) => {
     debug('join room', roomId)
     socket.join(roomId)
   })
 
+  /**
+   * Private message event to send message to the room it is currently joining
+   */
   socket.on('private_message', (data) => {
     debug('data = ', JSON.stringify(data, null, 4))
     socket.broadcast.to(data.room_id).emit('private_message', data.message)
@@ -77,11 +96,25 @@ io.on('connection', (socket) => {
 })
 
 // Helpers
+
+/**
+ * generate room id for 2 users
+ * @param {String} user1 
+ * @param {String} user2
+ * @return {Number} roomId
+ */
 function getRoomId (user1, user2) {
   const sortedUsers = [user1, user2].sort()
   return `${sortedUsers[0]}_${sortedUsers[1]}`
 }
 
+/**
+ * Emit join_room event to user 1 and add to pair list
+ * @param {String} user1 
+ * @param {String} user2
+ * @param {String} roomId
+ * @return {Number} roomId
+ */
 function joinRoom (user1, user2, roomId) {
   io.sockets.connected[user1].emit('join_room', roomId)
   pairs[user1] = user2
