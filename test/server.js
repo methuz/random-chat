@@ -36,8 +36,7 @@ describe('Random Chat', function() {
     });
   })
 
-  describe('Socket.io', function() {
-    console.log(config.port)
+  describe('Simple random', function() {
     let sender,
       receiver;
 
@@ -102,9 +101,54 @@ describe('Random Chat', function() {
 
     })
 
+    it('should get pair_has_left event', function(done) {
+      const privateMessage = 'secret'
+      let receiverSpy = sinon.spy();
+
+      receiver.on('pair_has_left', function() {
+	  	done()
+	  })
+
+      sender.on('join_room', function(_roomId) {
+        sender.emit('join_room_ack', _roomId)
+
+        setTimeout(function() {
+      		sender.disconnect()
+        }, 500)
+      })
+
+      receiver.on('join_room', function(_roomId) {
+        receiver.emit('join_room_ack', _roomId)
+      })
+
+      sender.emit('waiting');
+      receiver.emit('waiting');
+
+    })
+
     afterEach(function(done) {
       sender.disconnect()
       receiver.disconnect()
+      done()
+    })
+  })
+  describe('Complex random chat', function() {
+    let sender,
+      receiver;
+
+    beforeEach(function(done) {
+      sender1 = io(`http://localhost:${config.port}/`, ioOptions)
+      receiver1 = io(`http://localhost:${config.port}/`, ioOptions)
+      sender2 = io(`http://localhost:${config.port}/`, ioOptions)
+      receiver2 = io(`http://localhost:${config.port}/`, ioOptions)
+      done()
+    })
+
+    afterEach(function(done) {
+      sender1.disconnect()
+      sender2.disconnect()
+      receiver1.disconnect()
+      receiver2.disconnect()
       done()
     })
   })
