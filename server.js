@@ -1,13 +1,12 @@
 const app = require('express')()
 const debug = require('debug')('main')
-const fs = require('fs');
+const fs = require('fs')
 const http = require('http').Server(app)
 const io = require('socket.io')(http)
 const path = require('path')
-const yaml = require('js-yaml');
+const yaml = require('js-yaml')
 
-let config;
-
+let config
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/index.html'))
@@ -15,16 +14,6 @@ app.get('/', (req, res) => {
 
 const waitingList = []
 const pairs = {}
-
-function getRoomId(user1, user2) {
-    const sortedUsers = [user1, user2].sort()
-	return `${sortedUsers[0]}_${sortedUsers[1]}`	
-}
-
-function joinRoom(user1, user2, roomId) {
-  io.sockets.connected[user1].emit('join_room', roomId)
-  pairs[user1] = user2
-}
 
 io.on('connection', (socket) => {
   socket.on('waiting', () => {
@@ -66,14 +55,14 @@ io.on('connection', (socket) => {
 
     // If left user was in paired room
     const pairUser = pairs[socket.id]
-	
+
     // pairUser will be missing if the second user also disconnect
     if (pairUser) {
       socket.broadcast.to(getRoomId(socket.id, pairUser)).emit('pair_has_left')
-	  delete(pairs[pairUser])
+      delete (pairs[pairUser])
     }
 
-	delete(pairs[socket.id])
+    delete (pairs[socket.id])
   })
 
   socket.on('join_room_ack', (roomId) => {
@@ -86,6 +75,17 @@ io.on('connection', (socket) => {
     socket.broadcast.to(data.room_id).emit('private_message', data.message)
   })
 })
+
+// Helpers
+function getRoomId (user1, user2) {
+  const sortedUsers = [user1, user2].sort()
+  return `${sortedUsers[0]}_${sortedUsers[1]}`
+}
+
+function joinRoom (user1, user2, roomId) {
+  io.sockets.connected[user1].emit('join_room', roomId)
+  pairs[user1] = user2
+}
 
 
 module.exports = http

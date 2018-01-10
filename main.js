@@ -1,10 +1,10 @@
-const yaml = require('js-yaml');
-const fs = require('fs');
-const path = require('path');
+const yaml = require('js-yaml')
+const fs = require('fs')
+const path = require('path')
 try {
-  config = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '/config.yml'), 'utf8'));
+  config = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '/config.yml'), 'utf8'))
 } catch (e) {
-  console.log(e);
+  console.log(e)
 }
 
 const http = require(path.join(__dirname, '/server.js'))
