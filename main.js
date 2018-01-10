@@ -11,6 +11,14 @@ app.get('/', (req, res) => {
 const waitingList = []
 const rooms = []
 
+function joinRoom(user1, user2, roomId) {
+  io.sockets.connected[user1].emit('join room', roomId)
+  rooms[user1] = {
+    to: user2,
+    room_id: roomId
+  }
+}
+
 io.on('connection', (socket) => {
   socket.on('waiting', () => {
     waitingList.push(socket.id)
@@ -25,16 +33,15 @@ io.on('connection', (socket) => {
       const sortedUsers = [user1, user2].sort()
       const roomId = `${sortedUsers[0]}_${sortedUsers[1]}`
 
-      io.sockets.connected[user1].emit('join room', roomId)
-      io.sockets.connected[user2].emit('join room', roomId)
-
-      rooms.push({
-        users: [
-          user1,
-          user2
-        ],
-        room_id: roomId
-      })
+      // In case that some user disconnect immediately after joining it might cause problem
+      if (!io.sockets.connected[user1]) {
+        waitingList.push(user2)
+      } else if (!io.sockets.connected[user2]) {
+        waitingList.push(user1)
+      } else {
+        joinRoom(user1, user2, roomId)
+        joinRoom(user2, user1, roomId)
+      }
     }
   })
 
