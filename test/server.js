@@ -129,7 +129,65 @@ describe('Random Chat', function() {
       done()
     })
   })
-  describe('Complex random chat', function() {
+  describe('Complex random chat: 3 people', function() {
+    let sender,
+      receiver;
+
+    before(function(done) {
+      sender1 = io(`http://localhost:${config.testport}/`, ioOptions)
+      receiver1 = io(`http://localhost:${config.testport}/`, ioOptions)
+      receiver2 = io(`http://localhost:${config.testport}/`, ioOptions)
+      done()
+    })
+    it('Sender 1 should send message to reciever 2 after receiver1 left', function(done) {
+
+      const privateMessage = 'secret'
+
+      receiver2.on('private_message', function(message) {
+        assert(privateMessage === message)
+        done()
+      })
+
+      sender1.on('join_room', function(_roomId) {
+        sender1.emit('join_room_ack', _roomId)
+        setTimeout(function() {
+          sender1.emit('private_message', {
+            room_id: _roomId,
+            message: privateMessage
+          })
+        }, 500)
+      })
+
+      receiver1.on('join_room', function(_roomId) {
+        receiver1.emit('join_room_ack', _roomId)
+        setTimeout(function() {
+          receiver1.disconnect()
+        }, 500)
+      })
+
+      receiver2.on('join_room', function(_roomId) {
+        receiver2.emit('join_room_ack', _roomId)
+      })
+
+      sender1.on('pair_has_left', function() {
+        sender1.emit('waiting')
+      })
+      receiver2.on('pair_has_left', function() {
+        receiver2.emit('waiting')
+      })
+
+      sender1.emit('waiting');
+      receiver1.emit('waiting');
+      receiver2.emit('waiting');
+    })
+
+    after(function(done) {
+      sender1.disconnect()
+      receiver2.disconnect()
+      done()
+    })
+  })
+  describe('Complex random chat: 4 people', function() {
     let sender,
       receiver;
 
