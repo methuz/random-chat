@@ -8,11 +8,6 @@ const yaml = require('js-yaml');
 
 let config;
 
-try {
-  config = yaml.safeLoad(fs.readFileSync(path.join(__dirname, '/config.yml'), 'utf8'));
-} catch (e) {
-  console.log(e);
-}
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/index.html'))
@@ -21,12 +16,14 @@ app.get('/', (req, res) => {
 const waitingList = []
 const pairs = {}
 
+function getRoomId(user1, user2) {
+    const sortedUsers = [user1, user2].sort()
+	return `${sortedUsers[0]}_${sortedUsers[1]}`	
+}
+
 function joinRoom(user1, user2, roomId) {
   io.sockets.connected[user1].emit('join_room', roomId)
-  pairs[user1] = {
-    to: user2,
-    room_id: roomId
-  }
+  pairs[user1] = user2
 }
 
 io.on('connection', (socket) => {
@@ -40,8 +37,7 @@ io.on('connection', (socket) => {
       const user1 = waitingList.pop()
       const user2 = waitingList.pop()
 
-      const sortedUsers = [user1, user2].sort()
-      const roomId = `${sortedUsers[0]}_${sortedUsers[1]}`
+      const roomId = getRoomId(user1, user2)
 
       // In case that some user disconnect immediately after joining it might cause problem
       if (!io.sockets.connected[user1]) {
@@ -69,14 +65,15 @@ io.on('connection', (socket) => {
     }
 
     // If left user was in paired room
-    const pairData = pairs[socket.id]
-	debug('pairData = ', JSON.stringify(pairData, null, 4));
+    const pairUser = pairs[socket.id]
 	
-    // pairData will be missing if the second user also disconnect
-    if (pairData.hasOwnProperty('to')) {
-	  debug('pairData.room_id has left= ', JSON.stringify(pairData.room_id, null, 4));
-      socket.broadcast.to(pairData.room_id).emit('pair_has_left')
+    // pairUser will be missing if the second user also disconnect
+    if (pairUser) {
+      socket.broadcast.to(getRoomId(socket.id, pairUser)).emit('pair_has_left')
+	  delete(pairs[pairUser])
     }
+
+	delete(pairs[socket.id])
   })
 
   socket.on('join_room_ack', (roomId) => {
@@ -90,9 +87,5 @@ io.on('connection', (socket) => {
   })
 })
 
-const server = http.listen(config.port, () => {
-  console.log(`listening on port ${config.port}`)
-})
 
-server.configFile = config
-module.exports = server
+module.exports = http
