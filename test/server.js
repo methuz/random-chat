@@ -69,7 +69,7 @@ describe('Random Chat', function () {
       setTimeout(function () {
         sinon.assert.calledOnce(senderSpy)
         sinon.assert.calledOnce(receiverSpy)
-        assert(_.isEqual(senderSpy.args[0], receiverSpy.args[0]))
+        assert(_.isEqual(senderSpy.args[0][0], receiverSpy.args[0][0]))
         done()
       }, 500)
     })

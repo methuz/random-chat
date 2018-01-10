@@ -17,16 +17,6 @@ app.get('/', (req, res) => {
 const waitingList = []
 const pairs = {}
 
-function getRoomId (user1, user2) {
-  const sortedUsers = [user1, user2].sort()
-  return `${sortedUsers[0]}_${sortedUsers[1]}`
-}
-
-function joinRoom (user1, user2, roomId) {
-  io.sockets.connected[user1].emit('join_room', roomId, user2, user1)
-  pairs[user1] = user2
-}
-
 io.on('connection', (socket) => {
   /**
    * waiting event triggered from clients to inform server that it's free to join another chat
@@ -115,7 +105,7 @@ io.on('connection', (socket) => {
  * @param {String} user2
  * @return {Number} roomId
  */
-function getRoomId (user1, user2) {
+function getRoomId(user1, user2) {
   const sortedUsers = [user1, user2].sort()
   return `${sortedUsers[0]}_${sortedUsers[1]}`
 }
@@ -127,8 +117,8 @@ function getRoomId (user1, user2) {
  * @param {String} roomId
  * @return {Number} roomId
  */
-function joinRoom (user1, user2, roomId) {
-  io.sockets.connected[user1].emit('join_room', roomId)
+function joinRoom(user1, user2, roomId) {
+  io.sockets.connected[user1].emit('join_room', roomId, user1, user2)
   pairs[user1] = user2
 }
 
