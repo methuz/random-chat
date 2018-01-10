@@ -70,8 +70,11 @@ io.on('connection', (socket) => {
 
     // If left user was in paired room
     const pairData = pairs[socket.id]
+	debug('pairData = ', JSON.stringify(pairData, null, 4));
+	
     // pairData will be missing if the second user also disconnect
-    if (Object.hasOwnProperty(pairData, 'to')) {
+    if (pairData.hasOwnProperty('to')) {
+	  debug('pairData.room_id has left= ', JSON.stringify(pairData.room_id, null, 4));
       io.sockets.connected[pairData.to].emit('pair_has_left')
     }
   })

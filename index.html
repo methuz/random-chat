@@ -44,6 +44,7 @@
 		})
 
 		socket.on('pair_has_left', function(){ 
+		  console.log('pair has left, waiting');
 		  socket.emit('waiting');
 		})
       });
