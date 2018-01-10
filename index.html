@@ -30,7 +30,7 @@
 			roomId = _roomId
 			console.log(roomId)
 
-			socket.emit('join_room', _roomId)
+			socket.emit('join_room_ack', _roomId)
 			console.log('join room', _roomId)
     	});
 

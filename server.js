@@ -75,11 +75,11 @@ io.on('connection', (socket) => {
     // pairData will be missing if the second user also disconnect
     if (pairData.hasOwnProperty('to')) {
 	  debug('pairData.room_id has left= ', JSON.stringify(pairData.room_id, null, 4));
-      io.sockets.connected[pairData.to].emit('pair_has_left')
+      socket.broadcast.to(pairData.room_id).emit('pair_has_left')
     }
   })
 
-  socket.on('join_room', (roomId) => {
+  socket.on('join_room_ack', (roomId) => {
     debug('join room', roomId)
     socket.join(roomId)
   })
