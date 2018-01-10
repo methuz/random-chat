@@ -72,6 +72,36 @@ describe('Random Chat', function() {
       }, 500)
     })
 
+    it('should send private direct message', function(done) {
+      const privateMessage = 'secret'
+      let senderSpy = sinon.spy();
+      let receiverSpy = sinon.spy();
+
+      receiver.on('private_message', function(message) {
+	    assert(privateMessage === message)
+        done()
+      })
+
+      sender.on('join_room', function(_roomId) {
+        sender.emit('join_room_ack', _roomId)
+
+        setTimeout(function() {
+          sender.emit('private_message', {
+            room_id: _roomId,
+            message: privateMessage
+          })
+        }, 500)
+      })
+
+      receiver.on('join_room', function(_roomId) {
+        receiver.emit('join_room_ack', _roomId)
+      })
+
+      sender.emit('waiting');
+      receiver.emit('waiting');
+
+    })
+
     afterEach(function(done) {
       sender.disconnect()
       receiver.disconnect()
