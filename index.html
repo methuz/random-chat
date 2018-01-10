@@ -1,70 +1,113 @@
 <!doctype html>
 <html>
   <head>
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="static/style.css">
 	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
 	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 	<script>
+    var myId;
+    var receiverId;
+		var roomId;
       $(function () {
         var socket = io();
-		var roomId;
 
-		socket.emit('waiting');
-
-        $('form').submit(function(){
-		  //Append to one's own chat log
-		  var message = $('#m').val()
-			console.log('send to roomId = ', JSON.stringify(roomId, null, 4));
-			socket.emit('private_message', {
-				room_id : roomId,
-				message : message
-			});
-      	  $('#messages').append($('<li>').text(message));
-
-		  // Reset
-          $('#m').val('');
-          return false;
-        });
-
-		socket.on('join_room', function(_roomId){
+		    socket.emit('waiting');
+        $('#send').click(sendMessage);
+        $('#m').on('keypress', function (e) {
+          if(e.which === 13) sendMessage()
+        })
+		socket.on('join_room', function(_roomId, _receiverId, _myId){
 			console.log(_roomId)
+      myId = _myId
+      receiverId = _receiverId
 			roomId = _roomId
 			console.log(roomId)
-
+      $('#messages').append(getJoinChatHTML(receiverId))
+      $('#m').prop('disabled', false) 
 			socket.emit('join_room_ack', _roomId)
 			console.log('join room', _roomId)
     	});
 
 		socket.on('private_message', function(message){
-      	  $('#messages').append($('<li>').text(message));
+      	  $('#messages').append(getChatHTML(message, 'left'));
+          scrollToBottom();
     	});
 
 		socket.on('reconnect', function (client) {
 			console.log('reconnect');
 			socket.emit('waiting');
+      $('#m').prop('disabled', true) 
 		})
 
 		socket.on('pair_has_left', function(){ 
 		  console.log('pair has left, waiting');
 		  socket.emit('waiting');
+      $('#m').prop('disabled', true) 
+      $('#messages').append(getLeftChatHTML(receiverId))
 		})
+
+    function scrollToBottom() {
+      $('#divText').scrollTop($('#divText')[0].scrollHeight);
+    }
+
+    function getJoinChatHTML(userId) {
+					return '<li><div class="leave-chat"><p>user: '+ userId +' has join chat.</p></div></li>';
+    }
+    function getLeftChatHTML(userId) {
+					return '<li><div class="join-chat"><p>user: '+ userId +' has left chat.</p></div></li>';
+    }
+    function getChatHTML(text, position) {
+					return '<li><div class="'+position+'-chat"><p>'+ text +'</p> <span>'+ moment().format('hh:mm a')+'</span></div></li>';
+    }
+    function sendMessage() {
+		  //Append to one's own chat log
+		  var message = $('#m').val()
+      if(message === '') return
+			console.log('send to roomId = ', JSON.stringify(roomId, null, 4));
+			socket.emit('private_message', {
+				room_id : roomId,
+				message : message
+			});
+      	  $('#messages').append(getChatHTML(message, 'right'));
+          scrollToBottom();
+		  // Reset
+          $('#m').val('');
+          return false;
+    }
       });
     </script>
     <title>Socket.IO chat</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; }
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
-    </style>
   </head>
   <body>
-    <ul id="messages"></ul>
-    <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
-    </form>
+<div class="main-section">
+	<div class="row border-chat">
+		<div class="col-md-12 col-sm-12 col-xs-12 first-section">
+			<div class="row">
+				<div class="col-md-12 col-sm-12 col-xs-12 left-first-section">
+					<p>Chat</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="row border-chat">
+		<div class="col-md-12 col-sm-12 col-xs-12 second-section">
+			<div id="divText" class="chat-section">
+				<ul id="messages">
+					<li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<div class="row border-chat">
+		<div class="col-md-12 col-sm-12 col-xs-12 third-section">
+			<div class="text-bar">
+				<input type="text" id="m" placeholder="Write messege" autocomplete="off" disabled><a href="#"><i id="send" class="fa fa-arrow-right"></i></a>
+			</div>
+		</div>
+	</div>
+</div>
   </body>
 </html>
