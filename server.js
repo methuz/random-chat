@@ -1,3 +1,4 @@
+const express = require('express')
 const app = require('express')()
 const debug = require('debug')('main')
 const fs = require('fs')
@@ -8,12 +9,23 @@ const yaml = require('js-yaml')
 
 let config
 
+app.use('/static', express.static('static'))
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '/index.html'))
 })
 
 const waitingList = []
 const pairs = {}
+
+function getRoomId (user1, user2) {
+  const sortedUsers = [user1, user2].sort()
+  return `${sortedUsers[0]}_${sortedUsers[1]}`
+}
+
+function joinRoom (user1, user2, roomId) {
+  io.sockets.connected[user1].emit('join_room', roomId, user2, user1)
+  pairs[user1] = user2
+}
 
 io.on('connection', (socket) => {
   /**
@@ -119,6 +131,5 @@ function joinRoom (user1, user2, roomId) {
   io.sockets.connected[user1].emit('join_room', roomId)
   pairs[user1] = user2
 }
-
 
 module.exports = http
