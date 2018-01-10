@@ -72,7 +72,7 @@ io.on('connection', (socket) => {
     const pairData = pairs[socket.id]
     // pairData will be missing if the second user also disconnect
     if (Object.hasOwnProperty(pairData, 'to')) {
-      io.sockets.connected[pairData.to].emit('pair_left')
+      io.sockets.connected[pairData.to].emit('pair_has_left')
     }
   })
 

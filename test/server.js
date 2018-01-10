@@ -37,40 +37,40 @@ describe('Random Chat', function() {
   })
 
   describe('Socket.io', function() {
-	console.log(config.port)
-	let sender, receiver;
+    console.log(config.port)
+    let sender,
+      receiver;
 
-	beforeEach(function(done) {
+    beforeEach(function(done) {
       sender = io(`http://localhost:${config.port}/`, ioOptions)
       receiver = io(`http://localhost:${config.port}/`, ioOptions)
-	  done()
-	})
+      done()
+    })
     it('should connect to server', function(done) {
- 	  sender.emit('waiting');
- 	  receiver.emit('waiting');
-	  sender.on('join_room', function() {
-      	done()
-	  })
+      sender.emit('waiting');
+      receiver.emit('waiting');
+      sender.on('join_room', function() {
+        done()
+      })
     })
 
     it('should connect to the same room', function(done) {
-	  let senderSpy = sinon.spy();
-	  let receiverSpy = sinon.spy();
+      let senderSpy = sinon.spy();
+      let receiverSpy = sinon.spy();
 
-	  sender.on('join_room', senderSpy)
-	  receiver.on('join_room', receiverSpy)
+      sender.on('join_room', senderSpy)
+      receiver.on('join_room', receiverSpy)
 
- 	  sender.emit('waiting');
- 	  receiver.emit('waiting');
+      sender.emit('waiting');
+      receiver.emit('waiting');
 
-	  setTimeout(function() {
-	    sinon.assert.calledOnce(senderSpy);
-	    sinon.assert.calledOnce(receiverSpy);
-		assert(_.isEqual(senderSpy.args[0], receiverSpy.args[0]))
-	  	done()
-	  }, 500)
+      setTimeout(function() {
+        sinon.assert.calledOnce(senderSpy);
+        sinon.assert.calledOnce(receiverSpy);
+        assert(_.isEqual(senderSpy.args[0], receiverSpy.args[0]))
+        done()
+      }, 500)
     })
-
 
     afterEach(function(done) {
       sender.disconnect()
