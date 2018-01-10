@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test -t 10000"
-    "start": "node main.js"
+    "test": "mocha test -t 10000",
+    "start": "node main.js",
     "debug": "DEBUG=main node main.js"
   },
   "keywords": [],
