@@ -136,18 +136,53 @@ describe('Random Chat', function() {
     let sender,
       receiver;
 
-    beforeEach(function(done) {
+    before(function(done) {
       sender1 = io(`http://localhost:${config.port}/`, ioOptions)
       receiver1 = io(`http://localhost:${config.port}/`, ioOptions)
       sender2 = io(`http://localhost:${config.port}/`, ioOptions)
       receiver2 = io(`http://localhost:${config.port}/`, ioOptions)
       done()
     })
+    it('Sender 1 should send message to reciever 2 after sender 2 and receiver1 left', function(done) {
 
-    afterEach(function(done) {
+      const privateMessage = 'secret'
+
+      receiver2.on('private_message', function(message) {
+	    assert(privateMessage === message)
+        done()
+      })
+
+      sender1.on('join_room', function(_roomId) {
+        sender1.emit('join_room_ack', _roomId)
+
+        setTimeout(function() {
+          sender1.emit('private_message', {
+            room_id: _roomId,
+            message: privateMessage
+          })
+        }, 500)
+      })
+
+      sender2.on('join_room', function(_roomId) {
+        receiver1.emit('join_room_ack', _roomId)
+		receiver1.disconnect()
+      })
+      receiver1.on('join_room', function(_roomId) {
+        receiver1.emit('join_room_ack', _roomId)
+		receiver1.disconnect()
+      })
+      receiver2.on('join_room', function(_roomId) {
+        receiver2.emit('join_room_ack', _roomId)
+      })
+
+      sender1.emit('waiting');
+      receiver1.emit('waiting');
+      sender2.emit('waiting');
+      receiver2.emit('waiting');
+	})
+
+    after(function(done) {
       sender1.disconnect()
-      sender2.disconnect()
-      receiver1.disconnect()
       receiver2.disconnect()
       done()
     })
